@@ -2,7 +2,7 @@
 
 ![REOSC Logo](./reosc.png)
 
-## Home of POW + DPOS engine implementation (REOSC Mainnet node client)
+## REOSC Mainnet node client
 
 <p align="center"><strong><a href="https://github.com/REOSC/mn/releases/latest">» Download the latest release «</a></strong></p>
 
