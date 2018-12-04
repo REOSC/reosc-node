@@ -288,8 +288,8 @@ trace!(target: "spec", "BlockNum {:?}", number);
 					result_block_reward     = U256::from_dec_str( "300000000000000000000").unwrap();
 					ubi_reward              = U256::from_dec_str( "150000000000000000000").unwrap();
 					dev_reward              = U256::from_dec_str( "30000000000000000000").unwrap();
-					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
-					dev_contract = "0xc0471f97dd28c6a375f32f604f9c04ed17cf961d".into();
+//					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
+//					dev_contract = "0xc0471f97dd28c6a375f32f604f9c04ed17cf961d".into();
 				}
 				if number >= 60000 { // fixing error with json start file
 					
@@ -306,20 +306,20 @@ trace!(target: "spec", "BlockNum {:?}", number);
 					
 					for u in LiveBlock::uncles(&*block) {
 						let uncle_author = u.author();
-trace!(target: "spec", "uncle {:?} for {}", u, uncle_author );
+//trace!(target: "spec", "uncle {:?} for {}", u, uncle_author );
 						let result_uncle_reward = (result_block_reward * U256::from(8 + u.number() - number)).shr(3);
 
-trace!(target: "spec", "uncle reward {}", result_uncle_reward );
+//trace!(target: "spec", "uncle reward {}", result_uncle_reward );
 						rewards.push((*uncle_author, RewardKind::uncle(number, u.number()), result_uncle_reward));
 					}
 					result_block_reward = result_block_reward + result_block_reward.shr(5) * U256::from(n_uncles);
 				}				
 				
-trace!(target: "spec", "result_block_reward {:?} for {:?} {} uncles", result_block_reward, RewardKind::Author, n_uncles);
+//trace!(target: "spec", "result_block_reward {:?} for {:?} {} uncles", result_block_reward, RewardKind::Author, n_uncles);
 				rewards.push((author, RewardKind::Author, result_block_reward));
-trace!(target: "spec", "ubi_reward {:?} for {}", ubi_reward, ubi_contract);
+//trace!(target: "spec", "ubi_reward {:?} for {}", ubi_reward, ubi_contract);
 				rewards.push((ubi_contract, RewardKind::External, ubi_reward));
-trace!(target: "spec", "dev_reward {:?} for {}", dev_reward, dev_contract);
+//trace!(target: "spec", "dev_reward {:?} for {}", dev_reward, dev_contract);
 				rewards.push((dev_contract, RewardKind::External, dev_reward));
 
 				rewards

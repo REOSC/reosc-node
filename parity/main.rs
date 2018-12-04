@@ -181,8 +181,13 @@ fn main_direct(force_can_restart: bool) -> i32 {
 
 	let mut conf = {
 		let args = std::env::args().collect::<Vec<_>>();
+		
+//		println!( "Args {:?}", args );
 		reosc::Configuration::parse_cli(&args).unwrap_or_else(|e| e.exit())
 	};
+//	println!( "conf {:?}", conf );
+
+//	info!("Starting {}", Colour::White.bold().paint(reosc));
 
 	if let Some(spec_override) = take_spec_name_override() {
 		conf.args.flag_testnet = false;

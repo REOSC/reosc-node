@@ -34,6 +34,7 @@ use ethcore::snapshot::SnapshotConfiguration;
 use ethcore::verification::queue::VerifierSettings;
 use miner::pool;
 use num_cpus;
+//use ethcore::spec::{SpecParams, OptimizeFor};
 
 use rpc::{IpcConfiguration, HttpConfiguration, WsConfiguration};
 use parity_rpc::NetworkSettings;
@@ -345,6 +346,7 @@ impl Configuration {
 				cache_config: cache_config,
 				dirs: dirs,
 				spec: spec,
+//				spec: spec::REOSC,
 				pruning: pruning,
 				pruning_history: pruning_history,
 				pruning_memory: self.args.arg_pruning_memory,
@@ -389,6 +391,7 @@ impl Configuration {
 				whisper: whisper_config,
 				no_hardcoded_sync: self.args.flag_no_hardcoded_sync,
 			};
+trace!(target: "spec", "BlockNum {:?}", run_cmd.spec);	
 			Cmd::Run(run_cmd)
 		};
 

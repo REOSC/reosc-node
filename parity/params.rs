@@ -61,6 +61,7 @@ impl str::FromStr for SpecType {
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let spec = match s {
+			"reosc" => SpecType::REOSC,
 			"ethereum" | "frontier" | "homestead" | "byzantium" | "foundation" | "mainnet" => SpecType::Foundation,
 			"classic" | "frontier-dogmatic" | "homestead-dogmatic" => SpecType::Classic,
 			"poanet" | "poacore" => SpecType::Poanet,
@@ -70,7 +71,6 @@ impl str::FromStr for SpecType {
 			"ellaism" => SpecType::Ellaism,
 			"easthub" => SpecType::Easthub,
 			"social" => SpecType::Social,
-			"reosc" => SpecType::REOSC,
 			"olympic" => SpecType::Olympic,
 			"morden" | "classic-testnet" => SpecType::Morden,
 			"ropsten" => SpecType::Ropsten,
@@ -131,8 +131,8 @@ impl SpecType {
 				let file = fs::File::open(filename).map_err(|e| format!("Could not load specification file at {}: {}", filename, e))?;
 				Spec::load(params, file)
 			}
-//			_ => Ok(ethereum::new_reosc(params))
 		}
+		
 	}
 
 	pub fn legacy_fork_name(&self) -> Option<String> {

@@ -66,6 +66,8 @@ use signer;
 use db;
 use ethkey::Password;
 
+//use params::SpecType::REOSC;
+
 // how often to take periodic snapshots.
 const SNAPSHOT_PERIOD: u64 = 5000;
 
@@ -162,6 +164,7 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 
 	// load spec
 	let spec = cmd.spec.spec(SpecParams::new(cmd.dirs.cache.as_ref(), OptimizeFor::Memory))?;
+//4	if spec.
 
 	// load genesis hash
 	let genesis_hash = spec.genesis_header().hash();
@@ -354,7 +357,6 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 	where Cr: Fn(String) + 'static + Send,
 		  Rr: Fn() + 'static + Send
 {
-	// load spec
 	let spec = cmd.spec.spec(&cmd.dirs.cache)?;
 
 	// load genesis hash
