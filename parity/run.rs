@@ -1,18 +1,18 @@
-// Copyright 2015-2018 Parity Technologies (UK) Ltd.
-// This file is part of Parity.
+// Copyright 2015-2019 Parity Technologies (UK) Ltd.
+// This file is part of Parity Ethereum.
 
-// Parity is free software: you can redistribute it and/or modify
+// Parity Ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity is distributed in the hope that it will be useful,
+// Parity Ethereum is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::any::Any;
 use std::sync::{Arc, Weak};
@@ -130,6 +130,7 @@ pub struct RunCmd {
 	pub no_persistent_txqueue: bool,
 	pub whisper: ::whisper::Config,
 	pub no_hardcoded_sync: bool,
+	pub max_round_blocks_to_import: usize,
 }
 
 // node info fetcher for the local store.
@@ -357,6 +358,7 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 	where Cr: Fn(String) + 'static + Send,
 		  Rr: Fn() + 'static + Send
 {
+	// load spec
 	let spec = cmd.spec.spec(&cmd.dirs.cache)?;
 
 	// load genesis hash
@@ -529,6 +531,7 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 		cmd.pruning_history,
 		cmd.pruning_memory,
 		cmd.check_seal,
+		cmd.max_round_blocks_to_import,
 	);
 
 	client_config.queue.verifier_settings = cmd.verifier_settings;

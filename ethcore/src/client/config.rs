@@ -1,18 +1,18 @@
-// Copyright 2015-2018 Parity Technologies (UK) Ltd.
-// This file is part of Parity.
+// Copyright 2015-2019 Parity Technologies (UK) Ltd.
+// This file is part of Parity Ethereum.
 
-// Parity is free software: you can redistribute it and/or modify
+// Parity Ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity is distributed in the hope that it will be useful,
+// Parity Ethereum is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::str::FromStr;
 use std::fmt::{Display, Formatter, Error as FmtError};
@@ -121,6 +121,8 @@ pub struct ClientConfig {
 	pub check_seal: bool,
 	/// Maximal number of transactions queued for verification in a separate thread.
 	pub transaction_verification_queue_size: usize,
+	/// Maximal number of blocks to import at each round.
+	pub max_round_blocks_to_import: usize,
 	/// Snapshot configuration
 	pub snapshot: SnapshotConfiguration,
 }
@@ -147,6 +149,7 @@ impl Default for ClientConfig {
 			history_mem: 32 * mb,
 			check_seal: true,
 			transaction_verification_queue_size: 8192,
+			max_round_blocks_to_import: 12,
 			snapshot: Default::default(),
 		}
 	}

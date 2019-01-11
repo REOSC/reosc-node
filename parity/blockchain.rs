@@ -1,18 +1,18 @@
-// Copyright 2015-2018 Parity Technologies (UK) Ltd.
-// This file is part of Parity.
+// Copyright 2015-2019 Parity Technologies (UK) Ltd.
+// This file is part of Parity Ethereum.
 
-// Parity is free software: you can redistribute it and/or modify
+// Parity Ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity is distributed in the hope that it will be useful,
+// Parity Ethereum is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::str::{FromStr, from_utf8};
 use std::{io, fs};
@@ -98,6 +98,7 @@ pub struct ImportBlockchain {
 	pub with_color: bool,
 	pub verifier_settings: VerifierSettings,
 	pub light: bool,
+	pub max_round_blocks_to_import: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -116,6 +117,7 @@ pub struct ExportBlockchain {
 	pub from_block: BlockId,
 	pub to_block: BlockId,
 	pub check_seal: bool,
+	pub max_round_blocks_to_import: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -136,6 +138,7 @@ pub struct ExportState {
 	pub code: bool,
 	pub min_balance: Option<U256>,
 	pub max_balance: Option<U256>,
+	pub max_round_blocks_to_import: usize,
 }
 
 pub fn execute(cmd: BlockchainCmd) -> Result<(), String> {
@@ -354,6 +357,7 @@ fn execute_import(cmd: ImportBlockchain) -> Result<(), String> {
 		cmd.pruning_history,
 		cmd.pruning_memory,
 		cmd.check_seal,
+		12,
 	);
 
 	client_config.queue.verifier_settings = cmd.verifier_settings;
@@ -493,6 +497,7 @@ fn start_client(
 	compaction: DatabaseCompactionProfile,
 	cache_config: CacheConfig,
 	require_fat_db: bool,
+	max_round_blocks_to_import: usize,
 ) -> Result<ClientService, String> {
 
 	// load spec file
@@ -546,6 +551,7 @@ fn start_client(
 		pruning_history,
 		pruning_memory,
 		true,
+		max_round_blocks_to_import,
 	);
 
 	let restoration_db_handler = db::restoration_db_handler(&client_path, &client_config);
@@ -583,6 +589,7 @@ fn execute_export(cmd: ExportBlockchain) -> Result<(), String> {
 		cmd.compaction,
 		cmd.cache_config,
 		false,
+		cmd.max_round_blocks_to_import,
 	)?;
 	let format = cmd.format.unwrap_or_default();
 
@@ -626,7 +633,8 @@ fn execute_export_state(cmd: ExportState) -> Result<(), String> {
 		cmd.fat_db,
 		cmd.compaction,
 		cmd.cache_config,
-		true
+		true,
+		cmd.max_round_blocks_to_import,
 	)?;
 
 	let client = service.client();

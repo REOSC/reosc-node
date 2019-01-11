@@ -1,18 +1,18 @@
-// Copyright 2015-2018 Parity Technologies (UK) Ltd.
-// This file is part of Parity.
+// Copyright 2015-2019 Parity Technologies (UK) Ltd.
+// This file is part of Parity Ethereum.
 
-// Parity is free software: you can redistribute it and/or modify
+// Parity Ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity is distributed in the hope that it will be useful,
+// Parity Ethereum is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::path::Path;
 use std::cmp;
@@ -240,6 +240,8 @@ impl Engine<EthereumMachine> for Arc<Ethash> {
 
 	fn maximum_uncle_count(&self, _block: BlockNumber) -> usize { 2 }
 
+	fn maximum_gas_limit(&self) -> Option<U256> { Some(0x7fff_ffff_ffff_ffffu64.into()) }
+
 	fn populate_from_parent(&self, header: &mut Header, parent: &Header) {
 		let difficulty = self.calculate_difficulty(header, parent);
 		header.set_difficulty(difficulty);
@@ -282,21 +284,36 @@ trace!(target: "spec", "BlockNum {:?}", number);
 				let mut dev_reward          = U256::from_dec_str("14000000000000000000").unwrap();				
 				let mut ubi_contract = "0xD4d97b675a329D3eB7c16e010A14BB5FE294FCBb".into();
 				let mut dev_contract = "0x458E591620B4Da3f6fb673330C01E62a894bd76b".into();
-				
-				if number >= 100000 { // for for masternode support
-					
+
+				if number >= 60000 { // fixing error with json start file
 					result_block_reward     = U256::from_dec_str( "300000000000000000000").unwrap();
 					ubi_reward              = U256::from_dec_str( "150000000000000000000").unwrap();
 					dev_reward              = U256::from_dec_str( "30000000000000000000").unwrap();
-//					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
+				}
+				
+				if number >= 515000 { // for for masternode support
+					
+					result_block_reward     = U256::from_dec_str( "200000000000000000000").unwrap();
+					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
 //					dev_contract = "0xc0471f97dd28c6a375f32f604f9c04ed17cf961d".into();
 				}
-				if number >= 60000 { // fixing error with json start file
+
+				if number >= 1000000 { // for for masternode support
 					
-					result_block_reward     = U256::from_dec_str( "300000000000000000000").unwrap();
-					ubi_reward              = U256::from_dec_str( "150000000000000000000").unwrap();
-					dev_reward              = U256::from_dec_str( "30000000000000000000").unwrap();
+					result_block_reward     = U256::from_dec_str( "150000000000000000000").unwrap();
+					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
 				}
+				if number >= 1500000 { // for for masternode support
+					
+					result_block_reward     = U256::from_dec_str( "120000000000000000000").unwrap();
+					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
+				}
+				if number >= 2000000 { // for for masternode support
+					
+					result_block_reward     = U256::from_dec_str( "100000000000000000000").unwrap();
+					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
+				}
+				
 
 				// Bestow uncle rewards.
 				if number >= 64000 { 
@@ -306,20 +323,20 @@ trace!(target: "spec", "BlockNum {:?}", number);
 					
 					for u in LiveBlock::uncles(&*block) {
 						let uncle_author = u.author();
-//trace!(target: "spec", "uncle {:?} for {}", u, uncle_author );
+trace!(target: "spec", "uncle {:?} for {}", u, uncle_author );
 						let result_uncle_reward = (result_block_reward * U256::from(8 + u.number() - number)).shr(3);
 
-//trace!(target: "spec", "uncle reward {}", result_uncle_reward );
+trace!(target: "spec", "uncle reward {}", result_uncle_reward );
 						rewards.push((*uncle_author, RewardKind::uncle(number, u.number()), result_uncle_reward));
 					}
 					result_block_reward = result_block_reward + result_block_reward.shr(5) * U256::from(n_uncles);
 				}				
 				
-//trace!(target: "spec", "result_block_reward {:?} for {:?} {} uncles", result_block_reward, RewardKind::Author, n_uncles);
+trace!(target: "spec", "result_block_reward {:?} for {:?} {} uncles", result_block_reward, RewardKind::Author, n_uncles);
 				rewards.push((author, RewardKind::Author, result_block_reward));
-//trace!(target: "spec", "ubi_reward {:?} for {}", ubi_reward, ubi_contract);
+trace!(target: "spec", "ubi_reward {:?} for {}", ubi_reward, ubi_contract);
 				rewards.push((ubi_contract, RewardKind::External, ubi_reward));
-//trace!(target: "spec", "dev_reward {:?} for {}", dev_reward, dev_contract);
+trace!(target: "spec", "dev_reward {:?} for {}", dev_reward, dev_contract);
 				rewards.push((dev_contract, RewardKind::External, dev_reward));
 
 				rewards

@@ -1,18 +1,18 @@
-// Copyright 2015-2018 Parity Technologies (UK) Ltd.
-// This file is part of Parity.
+// Copyright 2015-2019 Parity Technologies (UK) Ltd.
+// This file is part of Parity Ethereum.
 
-// Parity is free software: you can redistribute it and/or modify
+// Parity Ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity is distributed in the hope that it will be useful,
+// Parity Ethereum is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #[macro_use]
 mod usage;
@@ -338,7 +338,7 @@ usage! {
 
 			ARG arg_unlock: (Option<String>) = None, or |c: &Config| c.account.as_ref()?.unlock.as_ref().map(|vec| vec.join(",")),
 			"--unlock=[ACCOUNTS]",
-			"Unlock ACCOUNTS for the duration of the execution. ACCOUNTS is a comma-delimited list of addresses. Implies --no-ui.",
+			"Unlock ACCOUNTS for the duration of the execution. ACCOUNTS is a comma-delimited list of addresses.",
 
 			ARG arg_password: (Vec<String>) = Vec::new(), or |c: &Config| c.account.as_ref()?.password.clone(),
 			"--password=[FILE]...",
@@ -407,7 +407,7 @@ usage! {
 			"--port=[PORT]",
 			"Override the port on which the node should listen.",
 
-			ARG arg_interface: (String)  = "all", or |c: &Config| c.network.as_ref()?.interface.clone(),
+			ARG arg_interface: (String) = "all", or |c: &Config| c.network.as_ref()?.interface.clone(),
 			"--interface=[IP]",
 			"Network interfaces. Valid values are 'all', 'local' or the ip of the interface you want parity to listen to.",
 
@@ -485,7 +485,7 @@ usage! {
 
 			ARG arg_jsonrpc_threads: (usize) = 4usize, or |c: &Config| c.rpc.as_ref()?.processing_threads,
 			"--jsonrpc-threads=[THREADS]",
-			"Turn on additional processing threads in all HTTP JSON-RPC servers. Setting this to non-zero value allows parallel execution of cpu-heavy queries.",
+			"Turn on additional processing threads for JSON-RPC servers (all transports). Setting this to a non-zero value allows parallel execution of cpu-heavy queries.",
 
 			ARG arg_jsonrpc_cors: (String) = "none", or |c: &Config| c.rpc.as_ref()?.cors.as_ref().map(|vec| vec.join(",")),
 			"--jsonrpc-cors=[URL]",
@@ -508,7 +508,7 @@ usage! {
 			"--ws-port=[PORT]",
 			"Specify the port portion of the WebSockets JSON-RPC server.",
 
-			ARG arg_ws_interface: (String)  = "local", or |c: &Config| c.websockets.as_ref()?.interface.clone(),
+			ARG arg_ws_interface: (String) = "local", or |c: &Config| c.websockets.as_ref()?.interface.clone(),
 			"--ws-interface=[IP]",
 			"Specify the hostname portion of the WebSockets JSON-RPC server, IP should be an interface's IP address, or all (all interfaces) or local.",
 
@@ -776,6 +776,10 @@ usage! {
 			"--stratum-secret=[STRING]",
 			"Secret for authorizing Stratum server for peers.",
 
+			ARG arg_max_round_blocks_to_import: (usize) = 12usize, or |c: &Config| c.mining.as_ref()?.max_round_blocks_to_import.clone(),
+			"--max-round-blocks-to-import=[S]",
+			"Maximal number of blocks to import for each import round.",
+
 		["Internal Options"]
 			FLAG flag_can_restart: (bool) = false, or |_| None,
 			"--can-restart",
@@ -879,7 +883,7 @@ usage! {
 			"Target size of the whisper message pool in megabytes.",
 
 		["Legacy Options"]
-		    // Options that are hidden from config, but are still unique for its functionality.
+			// Options that are hidden from config, but are still unique for its functionality.
 
 			FLAG flag_geth: (bool) = false, or |_| None,
 			"--geth",
@@ -1316,6 +1320,7 @@ struct Mining {
 	notify_work: Option<Vec<String>>,
 	refuse_service_transactions: Option<bool>,
 	infinite_pending_block: Option<bool>,
+	max_round_blocks_to_import: Option<usize>,
 }
 
 #[derive(Default, Debug, PartialEq, Deserialize)]
@@ -1741,6 +1746,7 @@ mod tests {
 			arg_notify_work: Some("http://localhost:3001".into()),
 			flag_refuse_service_transactions: false,
 			flag_infinite_pending_block: false,
+			arg_max_round_blocks_to_import: 12usize,
 
 			flag_stratum: false,
 			arg_stratum_interface: "local".to_owned(),
@@ -2008,6 +2014,7 @@ mod tests {
 				notify_work: None,
 				refuse_service_transactions: None,
 				infinite_pending_block: None,
+				max_round_blocks_to_import: None,
 			}),
 			footprint: Some(Footprint {
 				tracing: Some("on".into()),

@@ -1,18 +1,18 @@
-// Copyright 2015-2018 Parity Technologies (UK) Ltd.
-// This file is part of Parity.
+// Copyright 2015-2019 Parity Technologies (UK) Ltd.
+// This file is part of Parity Ethereum.
 
-// Parity is free software: you can redistribute it and/or modify
+// Parity Ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity is distributed in the hope that it will be useful,
+// Parity Ethereum is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::io;
 use std::io::{Write, BufReader, BufRead};
@@ -204,19 +204,20 @@ pub fn default_network_config() -> ::sync::NetworkConfiguration {
 }
 
 pub fn to_client_config(
-		cache_config: &CacheConfig,
-		spec_name: String,
-		mode: Mode,
-		tracing: bool,
-		fat_db: bool,
-		compaction: DatabaseCompactionProfile,
-		vm_type: VMType,
-		name: String,
-		pruning: Algorithm,
-		pruning_history: u64,
-		pruning_memory: usize,
-		check_seal: bool,
-	) -> ClientConfig {
+	cache_config: &CacheConfig,
+	spec_name: String,
+	mode: Mode,
+	tracing: bool,
+	fat_db: bool,
+	compaction: DatabaseCompactionProfile,
+	vm_type: VMType,
+	name: String,
+	pruning: Algorithm,
+	pruning_history: u64,
+	pruning_memory: usize,
+	check_seal: bool,
+	max_round_blocks_to_import: usize,
+) -> ClientConfig {
 	let mut client_config = ClientConfig::default();
 
 	let mb = 1024 * 1024;
@@ -249,6 +250,7 @@ pub fn to_client_config(
 	client_config.name = name;
 	client_config.verifier_type = if check_seal { VerifierType::Canon } else { VerifierType::CanonNoSeal };
 	client_config.spec_name = spec_name;
+	client_config.max_round_blocks_to_import = max_round_blocks_to_import;
 	client_config
 }
 

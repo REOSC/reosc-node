@@ -1,18 +1,18 @@
-// Copyright 2015-2018 Parity Technologies (UK) Ltd.
-// This file is part of Parity.
+// Copyright 2015-2019 Parity Technologies (UK) Ltd.
+// This file is part of Parity Ethereum.
 
-// Parity is free software: you can redistribute it and/or modify
+// Parity Ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity is distributed in the hope that it will be useful,
+// Parity Ethereum is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::time::Duration;
 use std::io::Read;
@@ -244,6 +244,7 @@ impl Configuration {
 				with_color: logger_config.color,
 				verifier_settings: self.verifier_settings(),
 				light: self.args.flag_light,
+				max_round_blocks_to_import: self.args.arg_max_round_blocks_to_import,
 			};
 			Cmd::Blockchain(BlockchainCmd::Import(import_cmd))
 		} else if self.args.cmd_export {
@@ -263,6 +264,7 @@ impl Configuration {
 					from_block: to_block_id(&self.args.arg_export_blocks_from)?,
 					to_block: to_block_id(&self.args.arg_export_blocks_to)?,
 					check_seal: !self.args.flag_no_seal_check,
+					max_round_blocks_to_import: self.args.arg_max_round_blocks_to_import,
 				};
 				Cmd::Blockchain(BlockchainCmd::Export(export_cmd))
 			} else if self.args.cmd_export_state {
@@ -283,6 +285,7 @@ impl Configuration {
 					code: !self.args.flag_export_state_no_code,
 					min_balance: self.args.arg_export_state_min_balance.and_then(|s| to_u256(&s).ok()),
 					max_balance: self.args.arg_export_state_max_balance.and_then(|s| to_u256(&s).ok()),
+					max_round_blocks_to_import: self.args.arg_max_round_blocks_to_import,
 				};
 				Cmd::Blockchain(BlockchainCmd::ExportState(export_cmd))
 			} else {
@@ -302,6 +305,7 @@ impl Configuration {
 				file_path: self.args.arg_snapshot_file.clone(),
 				kind: snapshot::Kind::Take,
 				block_at: to_block_id(&self.args.arg_snapshot_at)?,
+				max_round_blocks_to_import: self.args.arg_max_round_blocks_to_import,
 				snapshot_conf: snapshot_conf,
 			};
 			Cmd::Snapshot(snapshot_cmd)
@@ -319,6 +323,7 @@ impl Configuration {
 				file_path: self.args.arg_restore_file.clone(),
 				kind: snapshot::Kind::Restore,
 				block_at: to_block_id("latest")?, // unimportant.
+				max_round_blocks_to_import: self.args.arg_max_round_blocks_to_import,
 				snapshot_conf: snapshot_conf,
 			};
 			Cmd::Snapshot(restore_cmd)
@@ -390,6 +395,7 @@ impl Configuration {
 				no_persistent_txqueue: self.args.flag_no_persistent_txqueue,
 				whisper: whisper_config,
 				no_hardcoded_sync: self.args.flag_no_hardcoded_sync,
+				max_round_blocks_to_import: self.args.arg_max_round_blocks_to_import,
 			};
 trace!(target: "spec", "BlockNum {:?}", run_cmd.spec);	
 			Cmd::Run(run_cmd)
@@ -1264,6 +1270,7 @@ mod tests {
 			with_color: !cfg!(windows),
 			verifier_settings: Default::default(),
 			light: false,
+			max_round_blocks_to_import: 12,
 		})));
 	}
 
@@ -1286,6 +1293,7 @@ mod tests {
 			from_block: BlockId::Number(1),
 			to_block: BlockId::Latest,
 			check_seal: true,
+			max_round_blocks_to_import: 12,
 		})));
 	}
 
@@ -1310,6 +1318,7 @@ mod tests {
 			code: true,
 			min_balance: None,
 			max_balance: None,
+			max_round_blocks_to_import: 12,
 		})));
 	}
 
@@ -1332,6 +1341,7 @@ mod tests {
 			from_block: BlockId::Number(1),
 			to_block: BlockId::Latest,
 			check_seal: true,
+			max_round_blocks_to_import: 12,
 		})));
 	}
 
