@@ -102,15 +102,15 @@ $ cargo clean
 To start REOSC Node manually, just run
 
 ```bash
-$ ./target/release/reosc chain=reosc
+$ ./target/release/reosc
 ```
 
 so REOSC Node begins syncing the REOSC blockchain.
 
 ## About REOSC Node
 
-REOSC Node is based off [Parity-ethereum](https://github.com/paritytech/parity-ethereum) Client for REOSC use
+REOSC Node is based off [Parity-ethereum](https://github.com/paritytech/parity-ethereum) Client for REOSC use.
 
-It is a fork of Parity and will be maintained by REOSC team along with our upcoming C++ node implementation
+It is a fork of Parity and will be maintained by REOSC team.
 
-If you have any questions about our node please feel free to ask on telegramm channel
+If you have any questions about our node please feel free to ask on telegramm channel.
