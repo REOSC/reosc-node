@@ -291,27 +291,23 @@ trace!(target: "spec", "BlockNum {:?}", number);
 					dev_reward              = U256::from_dec_str( "30000000000000000000").unwrap();
 				}
 				
-				if number >= 515000 { // for for masternode support
+				if number >= 520000 { // for for masternode support
 					
 					result_block_reward     = U256::from_dec_str( "200000000000000000000").unwrap();
-					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
-//					dev_contract = "0xc0471f97dd28c6a375f32f604f9c04ed17cf961d".into();
+					ubi_contract = "0x013386fD68fAfe1A18C0140bedAadeD718073376".into();
 				}
 
 				if number >= 1000000 { // for for masternode support
 					
 					result_block_reward     = U256::from_dec_str( "150000000000000000000").unwrap();
-					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
 				}
 				if number >= 1500000 { // for for masternode support
 					
 					result_block_reward     = U256::from_dec_str( "120000000000000000000").unwrap();
-					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
 				}
 				if number >= 2000000 { // for for masternode support
 					
 					result_block_reward     = U256::from_dec_str( "100000000000000000000").unwrap();
-					ubi_contract = "0x1b855b54d64a234d2726483e24620a6de151590f".into();
 				}
 				
 
