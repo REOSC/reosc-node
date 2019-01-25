@@ -294,6 +294,7 @@ trace!(target: "spec", "BlockNum {:?}", number);
 				if number >= 520000 { // for for masternode support
 					
 					result_block_reward     = U256::from_dec_str( "200000000000000000000").unwrap();
+					ubi_reward              = U256::from_dec_str( "250000000000000000000").unwrap();
 					ubi_contract = "0x013386fD68fAfe1A18C0140bedAadeD718073376".into();
 				}
 

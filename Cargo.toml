@@ -2,7 +2,7 @@
 description = "REOS Node"
 name = "reosc"
 # NOTE Make sure to update util/version/Cargo.toml as well
-version = "2.1.6"
+version = "2.1.7"
 license = "GPL-3.0"
 authors = ["le Gift <legift@reosc.io>, Parity Technologies <admin@parity.io>"]
 
