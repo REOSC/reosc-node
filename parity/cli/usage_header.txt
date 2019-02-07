@@ -1,3 +1,3 @@
 ﻿REOSC Node.
 	Brought to you by REOSC team <info@reosc.io>
-	Copyright 2018 REOSC team
+	Copyright 2018-2019 REOSC team
