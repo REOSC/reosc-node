@@ -2,7 +2,7 @@
 
 ## Do you have a question?
 
-Check out our [Basic Usage](https://wiki.parity.io/Basic-Usage), [Configuration](https://wiki.parity.io/Configuring-Parity-Ethereum), and [FAQ](https://wiki.parity.io/FAQ) articles on our [wiki](https://wiki.parity.io/)!
+Check out our [Basic Usage](https://wiki.parity.io/Basic-Usage), [Configuration](https://wiki.parity.io/Configuring-REOSC), and [FAQ](https://wiki.parity.io/FAQ) articles on our [wiki](https://wiki.parity.io/)!
 
 See also frequently asked questions [tagged with `parity`](https://ethereum.stackexchange.com/questions/tagged/parity?sort=votes&pageSize=50) on Stack Exchange.
 
