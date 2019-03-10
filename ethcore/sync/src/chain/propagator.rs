@@ -45,7 +45,7 @@ fn accepts_service_transaction(client_id: &str) -> bool {
 	const SERVICE_TRANSACTIONS_VERSION: (u32, u32) = (1u32, 6u32);
 	// Parity client string prefix
 	const LEGACY_CLIENT_ID_PREFIX: &'static str = "Parity/v";
-	const PARITY_CLIENT_ID_PREFIX: &'static str = "REOSC/v";
+	const PARITY_CLIENT_ID_PREFIX: &'static str = "Parity-Ethereum/v";
 
 	let splitted = if client_id.starts_with(LEGACY_CLIENT_ID_PREFIX) {
 		client_id[LEGACY_CLIENT_ID_PREFIX.len()..].split('.')

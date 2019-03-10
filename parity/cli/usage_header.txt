@@ -1,3 +1,5 @@
 ﻿REOSC Node.
 	Brought to you by REOSC team <info@reosc.io>
 	Copyright 2018-2019 REOSC team
+	By Wood/Paronyan/Kotewicz/Drwięga/Volf et al.
+	Copyright 2015-2018 Parity Technologies (UK) Ltd.

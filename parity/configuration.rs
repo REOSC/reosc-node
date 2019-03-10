@@ -1,18 +1,18 @@
-// Copyright 2015-2019 Parity Technologies (UK) Ltd.
-// This file is part of Parity Ethereum.
+// Copyright 2015-2018 Parity Technologies (UK) Ltd.
+// This file is part of Parity.
 
-// Parity Ethereum is free software: you can redistribute it and/or modify
+// Parity is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity Ethereum is distributed in the hope that it will be useful,
+// Parity is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::time::Duration;
 use std::io::Read;
@@ -34,7 +34,6 @@ use ethcore::snapshot::SnapshotConfiguration;
 use ethcore::verification::queue::VerifierSettings;
 use miner::pool;
 use num_cpus;
-//use ethcore::spec::{SpecParams, OptimizeFor};
 
 use rpc::{IpcConfiguration, HttpConfiguration, WsConfiguration};
 use parity_rpc::NetworkSettings;
@@ -160,13 +159,13 @@ impl Configuration {
 					port: ws_conf.port,
 					authfile: authfile,
 				}
-			} else if self.args.cmd_signer_reject  {
+			} else if self.args.cmd_signer_reject {
 				Cmd::SignerReject {
 					id: self.args.arg_signer_reject_id,
 					port: ws_conf.port,
 					authfile: authfile,
 				}
-			} else if self.args.cmd_signer_list  {
+			} else if self.args.cmd_signer_list {
 				Cmd::SignerList {
 					port: ws_conf.port,
 					authfile: authfile,
@@ -209,7 +208,7 @@ impl Configuration {
 			};
 			Cmd::Account(account_cmd)
 		} else if self.args.flag_import_geth_keys {
-        	let account_cmd = AccountCmd::ImportFromGeth(
+				let account_cmd = AccountCmd::ImportFromGeth(
 				ImportFromGethAccounts {
 					spec: spec,
 					to: dirs.keys,
@@ -351,7 +350,6 @@ impl Configuration {
 				cache_config: cache_config,
 				dirs: dirs,
 				spec: spec,
-//				spec: spec::REOSC,
 				pruning: pruning,
 				pruning_history: pruning_history,
 				pruning_memory: self.args.arg_pruning_memory,
@@ -396,8 +394,9 @@ impl Configuration {
 				whisper: whisper_config,
 				no_hardcoded_sync: self.args.flag_no_hardcoded_sync,
 				max_round_blocks_to_import: self.args.arg_max_round_blocks_to_import,
+				on_demand_retry_count: self.args.arg_on_demand_retry_count,
+				on_demand_inactive_time_limit: self.args.arg_on_demand_inactive_time_limit,
 			};
-trace!(target: "spec", "BlockNum {:?}", run_cmd.spec);	
 			Cmd::Run(run_cmd)
 		};
 
@@ -1361,10 +1360,10 @@ mod tests {
 			support_token_api: true,
 			max_connections: 100,
 		}, LogConfig {
-            color: true,
-            mode: None,
-            file: None,
-        } ));
+			color: true,
+			mode: None,
+			file: None,
+		} ));
 	}
 
 	#[test]
@@ -1438,6 +1437,9 @@ mod tests {
 			no_hardcoded_sync: false,
 			no_persistent_txqueue: false,
 			whisper: Default::default(),
+			max_round_blocks_to_import: 12,
+			on_demand_retry_count: None,
+			on_demand_inactive_time_limit: None,
 		};
 		expected.secretstore_conf.enabled = cfg!(feature = "secretstore");
 		expected.secretstore_conf.http_enabled = cfg!(feature = "secretstore");
@@ -1546,11 +1548,11 @@ mod tests {
 						 "--jsonrpc-apis", "web3,eth"
 						 ]);
 		let conf2 = parse(&["parity", "--rpc",
-						  "--rpcport", "8000",
-						  "--rpcaddr", "all",
-						  "--rpccorsdomain", "*",
-						  "--rpcapi", "web3,eth"
-						  ]);
+							"--rpcport", "8000",
+							"--rpcaddr", "all",
+							"--rpccorsdomain", "*",
+							"--rpcapi", "web3,eth"
+							]);
 
 		// then
 		assert(conf1);

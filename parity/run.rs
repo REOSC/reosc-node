@@ -1,18 +1,18 @@
-// Copyright 2015-2019 Parity Technologies (UK) Ltd.
-// This file is part of Parity Ethereum.
+// Copyright 2015-2018 Parity Technologies (UK) Ltd.
+// This file is part of Parity.
 
-// Parity Ethereum is free software: you can redistribute it and/or modify
+// Parity is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity Ethereum is distributed in the hope that it will be useful,
+// Parity is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::any::Any;
 use std::sync::{Arc, Weak};
@@ -34,14 +34,13 @@ use ethereum_types::Address;
 use sync::{self, SyncConfig};
 use miner::work_notify::WorkPoster;
 use futures::IntoFuture;
-use futures_cpupool::CpuPool;
 use hash_fetch::{self, fetch};
 use informant::{Informant, LightNodeInformantData, FullNodeInformantData};
 use journaldb::Algorithm;
 use light::Cache as LightDataCache;
 use miner::external::ExternalMiner;
 use node_filter::NodeFilter;
-use parity_reactor::EventLoop;
+use parity_runtime::Runtime;
 use parity_rpc::{Origin, Metadata, NetworkSettings, informant, is_major_importing};
 use updater::{UpdatePolicy, Updater};
 use parity_version::version;
@@ -66,8 +65,6 @@ use signer;
 use db;
 use ethkey::Password;
 
-//use params::SpecType::REOSC;
-
 // how often to take periodic snapshots.
 const SNAPSHOT_PERIOD: u64 = 5000;
 
@@ -79,7 +76,13 @@ const SNAPSHOT_HISTORY: u64 = 100;
 const GAS_CORPUS_EXPIRATION_MINUTES: u64 = 60 * 6;
 
 // Pops along with error messages when a password is missing or invalid.
-const VERIFY_PASSWORD_HINT: &'static str = "Make sure valid password is present in files passed using `--password` or in the configuration file.";
+const VERIFY_PASSWORD_HINT: &str = "Make sure valid password is present in files passed using `--password` or in the configuration file.";
+
+// Full client number of DNS threads
+const FETCH_FULL_NUM_DNS_THREADS: usize = 4;
+
+// Light client number of DNS threads
+const FETCH_LIGHT_NUM_DNS_THREADS: usize = 1;
 
 #[derive(Debug, PartialEq)]
 pub struct RunCmd {
@@ -131,6 +134,8 @@ pub struct RunCmd {
 	pub whisper: ::whisper::Config,
 	pub no_hardcoded_sync: bool,
 	pub max_round_blocks_to_import: usize,
+	pub on_demand_retry_count: Option<usize>,
+	pub on_demand_inactive_time_limit: Option<u64>,
 }
 
 // node info fetcher for the local store.
@@ -165,7 +170,6 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 
 	// load spec
 	let spec = cmd.spec.spec(SpecParams::new(cmd.dirs.cache.as_ref(), OptimizeFor::Memory))?;
-//4	if spec.
 
 	// load genesis hash
 	let genesis_hash = spec.genesis_header().hash();
@@ -210,7 +214,13 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 	config.queue.verifier_settings = cmd.verifier_settings;
 
 	// start on_demand service.
-	let on_demand = Arc::new(::light::on_demand::OnDemand::new(cache.clone()));
+	let on_demand = Arc::new({
+		let mut on_demand = ::light::on_demand::OnDemand::new(cache.clone());
+		on_demand.default_retry_number(cmd.on_demand_retry_count.unwrap_or(::light::on_demand::DEFAULT_RETRY_COUNT));
+		on_demand.query_inactive_time_limit(cmd.on_demand_inactive_time_limit.map(Duration::from_millis)
+																				.unwrap_or(::light::on_demand::DEFAULT_QUERY_TIME_LIMIT));
+		on_demand
+	});
 
 	let sync_handle = Arc::new(RwLock::new(Weak::new()));
 	let fetch = ::light_helpers::EpochFetch {
@@ -260,7 +270,7 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 	*sync_handle.write() = Arc::downgrade(&light_sync);
 
 	// spin up event loop
-	let event_loop = EventLoop::spawn();
+	let runtime = Runtime::with_default_thread_count();
 
 	// queue cull service.
 	let queue_cull = Arc::new(::light_helpers::QueueCull {
@@ -268,7 +278,7 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 		sync: light_sync.clone(),
 		on_demand: on_demand.clone(),
 		txq: txq.clone(),
-		remote: event_loop.remote(),
+		executor: runtime.executor(),
 	});
 
 	service.register_handler(queue_cull).map_err(|e| format!("Error attaching service: {:?}", e))?;
@@ -276,10 +286,8 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 	// start the network.
 	light_sync.start_network();
 
-	let cpu_pool = CpuPool::new(4);
-
 	// fetch service
-	let fetch = fetch::Client::new().map_err(|e| format!("Error starting fetch client: {:?}", e))?;
+	let fetch = fetch::Client::new(FETCH_LIGHT_NUM_DNS_THREADS).map_err(|e| format!("Error starting fetch client: {:?}", e))?;
 	let passwords = passwords_from_files(&cmd.acc_conf.password_files)?;
 
 	// prepare account provider
@@ -303,9 +311,8 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 		transaction_queue: txq,
 		ws_address: cmd.ws_conf.address(),
 		fetch: fetch,
-		pool: cpu_pool.clone(),
 		geth_compatibility: cmd.geth_compatibility,
-		remote: event_loop.remote(),
+		executor: runtime.executor(),
 		whisper_rpc: whisper_factory,
 		private_tx_service: None, //TODO: add this to client.
 		gas_price_percentile: cmd.gas_price_percentile,
@@ -314,13 +321,8 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 
 	let dependencies = rpc::Dependencies {
 		apis: deps_for_rpc_apis.clone(),
-		remote: event_loop.raw_remote(),
+		executor: runtime.executor(),
 		stats: rpc_stats.clone(),
-		pool: if cmd.http_conf.processing_threads > 0 {
-			Some(rpc::CpuPool::new(cmd.http_conf.processing_threads))
-		} else {
-			None
-		},
 	};
 
 	// start rpc servers
@@ -348,7 +350,7 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 			rpc: rpc_direct,
 			informant,
 			client,
-			keep_alive: Box::new((event_loop, service, ws_server, http_server, ipc_server)),
+			keep_alive: Box::new((runtime, service, ws_server, http_server, ipc_server)),
 		}
 	})
 }
@@ -356,7 +358,7 @@ fn execute_light_impl(cmd: RunCmd, logger: Arc<RotatingLogger>) -> Result<Runnin
 fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: Cr,
 						on_updater_rq: Rr) -> Result<RunningClient, String>
 	where Cr: Fn(String) + 'static + Send,
-		  Rr: Fn() + 'static + Send
+		Rr: Fn() + 'static + Send
 {
 	// load spec
 	let spec = cmd.spec.spec(&cmd.dirs.cache)?;
@@ -467,19 +469,17 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 	// prepare account provider
 	let account_provider = Arc::new(prepare_account_provider(&cmd.spec, &cmd.dirs, &spec.data_dir, cmd.acc_conf, &passwords)?);
 
-	let cpu_pool = CpuPool::new(4);
-
 	// spin up event loop
-	let event_loop = EventLoop::spawn();
+	let runtime = Runtime::with_default_thread_count();
 
 	// fetch service
-	let fetch = fetch::Client::new().map_err(|e| format!("Error starting fetch client: {:?}", e))?;
+	let fetch = fetch::Client::new(FETCH_FULL_NUM_DNS_THREADS).map_err(|e| format!("Error starting fetch client: {:?}", e))?;
 
 	let txpool_size = cmd.miner_options.pool_limits.max_count;
 	// create miner
 	let miner = Arc::new(Miner::new(
 		cmd.miner_options,
-		cmd.gas_pricer_conf.to_gas_pricer(fetch.clone(), cpu_pool.clone()),
+		cmd.gas_pricer_conf.to_gas_pricer(fetch.clone(), runtime.executor()),
 		&spec,
 		Some(account_provider.clone()),
 
@@ -490,7 +490,7 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 
 	if !cmd.miner_extras.work_notify.is_empty() {
 		miner.add_work_listener(Box::new(
-			WorkPoster::new(&cmd.miner_extras.work_notify, fetch.clone(), event_loop.remote())
+			WorkPoster::new(&cmd.miner_extras.work_notify, fetch.clone(), runtime.executor())
 		));
 	}
 
@@ -689,7 +689,7 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 		&Arc::downgrade(&(service.client() as Arc<BlockChainClient>)),
 		&Arc::downgrade(&sync_provider),
 		update_policy,
-		hash_fetch::Client::with_fetch(contract_client.clone(), cpu_pool.clone(), updater_fetch, event_loop.remote())
+		hash_fetch::Client::with_fetch(contract_client.clone(), updater_fetch, runtime.executor())
 	);
 	service.add_notify(updater.clone());
 
@@ -714,8 +714,7 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 		geth_compatibility: cmd.geth_compatibility,
 		ws_address: cmd.ws_conf.address(),
 		fetch: fetch.clone(),
-		pool: cpu_pool.clone(),
-		remote: event_loop.remote(),
+		executor: runtime.executor(),
 		whisper_rpc: whisper_factory,
 		private_tx_service: Some(private_tx_service.clone()),
 		gas_price_percentile: cmd.gas_price_percentile,
@@ -724,14 +723,8 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 
 	let dependencies = rpc::Dependencies {
 		apis: deps_for_rpc_apis.clone(),
-		remote: event_loop.raw_remote(),
+		executor: runtime.executor(),
 		stats: rpc_stats.clone(),
-		pool: if cmd.http_conf.processing_threads > 0 {
-			Some(rpc::CpuPool::new(cmd.http_conf.processing_threads))
-		} else {
-			None
-		},
-
 	};
 
 	// start rpc servers
@@ -811,7 +804,7 @@ fn execute_impl<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>, on_client_rq: 
 			informant,
 			client,
 			client_service: Arc::new(service),
-			keep_alive: Box::new((watcher, updater, ws_server, http_server, ipc_server, secretstore_key_server, ipfs_server, event_loop)),
+			keep_alive: Box::new((watcher, updater, ws_server, http_server, ipc_server, secretstore_key_server, ipfs_server, runtime)),
 		}
 	})
 }
@@ -906,7 +899,7 @@ impl RunningClient {
 pub fn execute<Cr, Rr>(cmd: RunCmd, logger: Arc<RotatingLogger>,
 						on_client_rq: Cr, on_updater_rq: Rr) -> Result<RunningClient, String>
 	where Cr: Fn(String) + 'static + Send,
-		  Rr: Fn() + 'static + Send
+		Rr: Fn() + 'static + Send
 {
 	if cmd.light {
 		execute_light_impl(cmd, logger)
@@ -966,6 +959,11 @@ fn prepare_account_provider(spec: &SpecType, dirs: &Directories, data_dir: &str,
 		account_settings,
 	);
 
+	// Add development account if running dev chain:
+	if let SpecType::Dev = *spec {
+		insert_dev_account(&account_provider);
+	}
+
 	for a in cfg.unlocked_accounts {
 		// Check if the account exists
 		if !account_provider.has_account(a) {
@@ -980,11 +978,6 @@ fn prepare_account_provider(spec: &SpecType, dirs: &Directories, data_dir: &str,
 		if !passwords.iter().any(|p| account_provider.unlock_account_permanently(a, (*p).clone()).is_ok()) {
 			return Err(format!("No valid password to unlock account {}. {}", a, VERIFY_PASSWORD_HINT));
 		}
-	}
-
-	// Add development account if running dev chain:
-	if let SpecType::Dev = *spec {
-		insert_dev_account(&account_provider);
 	}
 
 	Ok(account_provider)

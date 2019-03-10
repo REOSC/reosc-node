@@ -1,18 +1,18 @@
-// Copyright 2015-2019 Parity Technologies (UK) Ltd.
-// This file is part of Parity Ethereum.
+// Copyright 2015-2018 Parity Technologies (UK) Ltd.
+// This file is part of Parity.
 
-// Parity Ethereum is free software: you can redistribute it and/or modify
+// Parity is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Parity Ethereum is distributed in the hope that it will be useful,
+// Parity is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Parity Ethereum.  If not, see <http://www.gnu.org/licenses/>.
+// along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
 //! Consensus engine specification and basic implementations.
 
@@ -338,10 +338,30 @@ pub trait Engine<M: Machine>: Sync + Send {
 	///
 	/// This either means that an immediate transition occurs or a block signalling transition
 	/// has reached finality. The `Headers` given are not guaranteed to return any blocks
-	/// from any epoch other than the current.
+	/// from any epoch other than the current. The client must keep track of finality and provide
+	/// the latest finalized headers to check against the transition store.
 	///
 	/// Return optional transition proof.
 	fn is_epoch_end(
+		&self,
+		_chain_head: &M::Header,
+		_finalized: &[H256],
+		_chain: &Headers<M::Header>,
+		_transition_store: &PendingTransitionStore,
+	) -> Option<Vec<u8>> {
+		None
+	}
+
+	/// Whether a block is the end of an epoch.
+	///
+	/// This either means that an immediate transition occurs or a block signalling transition
+	/// has reached finality. The `Headers` given are not guaranteed to return any blocks
+	/// from any epoch other than the current. This is a specialized method to use for light
+	/// clients since the light client doesn't track finality of all blocks, and therefore finality
+	/// for blocks in the current epoch is built inside this method by the engine.
+	///
+	/// Return optional transition proof.
+	fn is_epoch_end_light(
 		&self,
 		_chain_head: &M::Header,
 		_chain: &Headers<M::Header>,
@@ -409,7 +429,7 @@ pub trait Engine<M: Machine>: Sync + Send {
 
 	/// Gather all ancestry actions. Called at the last stage when a block is committed. The Engine must guarantee that
 	/// the ancestry exists.
-	fn ancestry_actions(&self, _block: &M::LiveBlock, _ancestry: &mut Iterator<Item=M::ExtendedHeader>) -> Vec<AncestryAction> {
+	fn ancestry_actions(&self, _header: &M::Header, _ancestry: &mut Iterator<Item=M::ExtendedHeader>) -> Vec<AncestryAction> {
 		Vec::new()
 	}
 

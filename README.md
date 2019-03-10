@@ -15,23 +15,20 @@ Welcome to the REOSC Node source code repository! This software enables business
 - Minimal memory and storage footprint
 - Synchronise in hours, not days with Warp Sync
 - Modular for light integration into your service or product
-- Designed for scalable BFT - DPOS consensus blockchain platform with millions of transactions per second support
-- Smart contract / Decentralized application platform powered by Web Assembly & EVM
-- Designed for Inter Blockchain Communication (IBC) with EOSIO platfotm
-- Designed for Decentralized Ethereum side-chain bridge
 
 ## Technical Overview
 
-REOSC Node's goal is to be the fastest, lightest, and most secure REOSC client. We are developing REOSC using the sophisticated and cutting-edge **Rust programming language**. REOSC Node is licensed under the GPLv3 and can be used for all your REOSC needs.
+Parity Ethereum's goal is to be the fastest, lightest, and most secure Ethereum client. We are developing Parity Ethereum using the sophisticated and cutting-edge **Rust programming language**. Parity Ethereum is licensed under the GPLv3 and can be used for all your Ethereum needs.
 
-By default, REOSC Node runs a JSON-RPC HTTP server on port `:8545` and a Web-Sockets server on port `:8546`. This is fully configurable and supports a number of APIs.
+By default, Parity Ethereum runs a JSON-RPC HTTP server on port `:8545` and a Web-Sockets server on port `:8546`. This is fully configurable and supports a number of APIs.
 
-If you run into problems while using REOSC Node, check out the [wiki for documentation](https://wiki.parity.io/),
-feel free to [file an issue in this repository](https://github.com/REOSC/reosc-eosc/issues/new), or hop on our [Discord](https://discord.gg/CDQk9RR) chat room to ask a question. We are glad to help! **For security-critical issues**, please refer to the security policy outlined in [SECURITY.md](SECURITY.md).
+If you run into problems while using Parity Ethereum, check out the [wiki for documentation](https://wiki.parity.io/), feel free to [file an issue in this repository](https://github.com/paritytech/parity-ethereum/issues/new), or hop on our [Gitter](https://gitter.im/paritytech/parity) or [Riot](https://riot.im/app/#/group/+parity:matrix.parity.io) chat room to ask a question. We are glad to help! **For security-critical issues**, please refer to the security policy outlined in [SECURITY.md](SECURITY.md).
+
+Parity Ethereum's current beta-release is 2.1. You can download it at [the releases page](https://github.com/paritytech/parity-ethereum/releases) or follow the instructions below to build from source. Please, mind the [CHANGELOG.md](CHANGELOG.md) for a list of all changes between different versions.
 
 ## Build Dependencies
 
-REOSC Node requires **Rust version 1.30.x** to build.
+Parity Ethereum requires **Rust version 1.29.x** to build.
 
 We recommend installing Rust through [rustup](https://www.rustup.rs/). If you don't already have `rustup`, you can install it like this:
 
@@ -40,7 +37,7 @@ We recommend installing Rust through [rustup](https://www.rustup.rs/). If you do
   $ curl https://sh.rustup.rs -sSf | sh
   ```
 
-  REOSC Node also requires `gcc`, `g++`, `libudev-dev`, `pkg-config`, `file`, `make`, and `cmake` packages to be installed.
+  Parity Ethereum also requires `gcc`, `g++`, `libudev-dev`, `pkg-config`, `file`, `make`, and `cmake` packages to be installed.
 
 - OSX:
   ```bash
@@ -60,28 +57,20 @@ Once you have `rustup` installed, then you need to install:
 * [Perl](https://www.perl.org)
 * [Yasm](https://yasm.tortall.net)
 
-Make sure that these binaries are in your `PATH`. After that, you should be able to build REOSC Node from source.
+Make sure that these binaries are in your `PATH`. After that, you should be able to build Parity Ethereum from source.
 
-## Build REOSC Node from Source Code
-
-For ubuntu >= 14.04
+## Build from Source Code
 
 ```bash
-# Install dependencies from apt-get package manager
-$ sudo apt-get -y install libudev-dev file cmake
-
-# Install rustup if not installed
-$ curl https://sh.rustup.rs -sSf | sh
-
-# download REOSC Node code
-$ git clone https://github.com/REOSC/reosc-node
-$ cd reosc-node
+# download Parity Ethereum code
+$ git clone https://github.com/paritytech/parity-ethereum
+$ cd parity-ethereum
 
 # build in release mode
 $ cargo build --release --features final
 ```
 
-This produces an executable `reosc` in the `./target/release` subdirectory.
+This produces an executable in the `./target/release` subdirectory.
 
 Note: if cargo fails to parse manifest try:
 
@@ -95,22 +84,73 @@ Note, when compiling a crate and you receive errors, it's in most cases your out
 $ cargo clean
 ```
 
-## Start REOSC Node
+This always compiles the latest nightly builds. If you want to build stable or beta, do a
+
+```bash
+$ git checkout stable
+```
+
+or
+
+```bash
+$ git checkout beta
+```
+
+## Simple One-Line Installer for Mac and Linux
+
+```bash
+bash <(curl https://get.parity.io -L)
+```
+
+The one-line installer always defaults to the latest beta release. To install a stable release, run:
+
+```bash
+bash <(curl https://get.parity.io -L) -r stable
+```
+
+## Start Parity Ethereum
 
 ### Manually
 
-To start REOSC Node manually, just run
+To start Parity Ethereum manually, just run
 
 ```bash
-$ ./target/release/reosc
+$ ./target/release/parity
 ```
 
-so REOSC Node begins syncing the REOSC blockchain.
+so Parity Ethereum begins syncing the Ethereum blockchain.
 
-## About REOSC Node
+### Using `systemd` service file
 
-REOSC Node is based off [Parity-ethereum](https://github.com/paritytech/parity-ethereum) Client for REOSC use.
+To start Parity Ethereum as a regular user using `systemd` init:
 
-It is a fork of Parity and will be maintained by REOSC team.
+1. Copy `./scripts/parity.service` to your
+`systemd` user directory (usually `~/.config/systemd/user`).
+2. To configure Parity Ethereum, write a `/etc/parity/config.toml` config file, see [Configuring Parity Ethereum](https://paritytech.github.io/wiki/Configuring-Parity) for details.
 
-If you have any questions about our node please feel free to ask on telegramm channel.
+## Parity Ethereum toolchain
+
+In addition to the Parity Ethereum client, there are additional tools in this repository available:
+
+- [evmbin](https://github.com/paritytech/parity-ethereum/blob/master/evmbin/) - EVM implementation for Parity Ethereum.
+- [ethabi](https://github.com/paritytech/ethabi) - Parity Ethereum function calls encoding.
+- [ethstore](https://github.com/paritytech/parity-ethereum/blob/master/ethstore/) - Parity Ethereum key management.
+- [ethkey](https://github.com/paritytech/parity-ethereum/blob/master/ethkey/) - Parity Ethereum keys generator.
+- [whisper](https://github.com/paritytech/parity-ethereum/blob/master/whisper/) - Implementation of Whisper-v2 PoC.
+
+## Join the chat!
+
+Questions? Get in touch with us on Gitter:
+[![Gitter: Parity](https://img.shields.io/badge/gitter-parity-4AB495.svg)](https://gitter.im/paritytech/parity)
+[![Gitter: Parity.js](https://img.shields.io/badge/gitter-parity.js-4AB495.svg)](https://gitter.im/paritytech/parity.js)
+[![Gitter: Parity/Miners](https://img.shields.io/badge/gitter-parity/miners-4AB495.svg)](https://gitter.im/paritytech/parity/miners)
+[![Gitter: Parity-PoA](https://img.shields.io/badge/gitter-parity--poa-4AB495.svg)](https://gitter.im/paritytech/parity-poa)
+
+Alternatively, join our community on Matrix:
+[![Riot: +Parity](https://img.shields.io/badge/riot-%2Bparity%3Amatrix.parity.io-orange.svg)](https://riot.im/app/#/group/+parity:matrix.parity.io)
+
+## Documentation
+
+Official website: https://parity.io
+
+Be sure to [check out our wiki](https://wiki.parity.io) for more information.
